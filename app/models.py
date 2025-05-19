@@ -1,7 +1,75 @@
+import os
+import pandas as pd
+import numpy as np
+import requests
+import json
+from bs4 import BeautifulSoup
+from config import headers
+from matplotlib import pyplot as plt
 class Product:
-    def __init__(self):
-        pass
+    def __init__(self, product_id, product_name, opinions, stats):
+        self.product_id = product_id
+        self.product_name = product_name
+        self.opinions = opinions
+        self.stats = stats
 
+    def __str__(self):
+        return f"product_id: {self.product_id}\nproduct_name: {self.product_name}\nstats:"+json.dumps(self.stats, indent=4, ascii=False)+"\nopinions"+"\n\n".join([str(opinion) for opinion in self.opinions])
+
+    def __repr__(self):
+        return f"Product(product_id={self.product_id}, product_name={self.product_name}, opinions=["+", ".join(repr(opinion) for opinion in self.opinions)+f"], stats={self.stats})"
+
+    def get_link(self):
+        return f"https://www.ceneo.pl/{self.product_id}#tab=reviews"
+    
+    def extract_name(self):
+        response = requests.get(self.get_link(), headers=headers)
+        page_dom = BeautifulSoup(response.text, "html.parser")
+        self.product_name = page_dom.select_one("h1")
+
+    def opinions_to_dict(self):
+        return [opinion.to_dict() for opinion in self.opinions]
+    
+    def calculate_stats(self):
+        opinions = pd.DataFrame.from_dict(self.opinions_to_dict())
+        self.stats["opinions_count"] = opinions.shape[0]
+        self.stats["pros_count"] = opinions.pros_pl.astype(bool).sum()
+        self.stats["cons_count"] = opinions.cons_pl.astype(bool).sum()
+        self.stats["pros_cons_count"] = opinions.apply(lambda o: bool(o.pros_pl) and bool(o.cons_pl), axis=1).sum()
+        self.stats["average_stars"] = opinions.stars.mean()
+        self.stats["pros"] = opinions.pros_en.explode().value_counts()
+        self.stats["cons"] = opinions.cons_en.explode().value_counts()
+        self.stats["recomendations"] = opinions.recomend.value_counts(dropna=False).sort_index().reindex(["Polecam", "Nie polecam", None], fill_value=0)
+        self.stats["stars"] = opinions.stars.value_counts().reindex(list(np.arange(0.5, 5.5, 0.5)), fill_value=0)
+
+    def generate_charts(self):        
+        if not os.path.exists(".app/static/pie_charts"):
+            os.mkdir(".app/static/pie_charts")
+        if not os.path.exists(".app/static/bar_charts"):
+            os.mkdir(".app/static/bar_charts")
+        self.stats["recomendations"].plot.pie(
+            label = "",   
+            labels = ["Recommend", "Not recommend", "No opinion"],
+            colors = ["forestgreen", "crimson", "steelblue"],
+            autopct = lambda r: f"{r:.1f}%" if r>0 else ""
+        )
+        plt.title(f"Recomendations for product {self.product_id}\nTotal number of opinions {self.stats['opinions_count']}")
+        plt.savefig(f".app/static/pie_charts/{self.product_id}.png")
+        plt.close()
+
+
+        plt.figure(figsize=(7,6))
+        ax = self.stats["stars"].plot.bar(
+            color=["forestgreen" if s>3.5 else "crimson" if s<3 else "steelblue" for s in self.stats['stars'].index]
+            
+        )
+        plt.bar_label(container=ax.containers[0])
+        plt.xlabel("Number of stars")
+        plt.ylabel("Number of opinions")
+        plt.title(f"Number of opinions about product {self.product_id}\nwith particular number of stars\n Total number of opinions {self.stats['opinions_count']}")
+        plt.xticks(rotation=0)
+        plt.savefig(f".app/static/bar_charts/{self.product_id}.png")
+        plt.close()
 class Opinion:
 
     selectors = {
@@ -35,4 +103,6 @@ class Opinion:
     
     def __repr__(self):
         return "Opinion("+", ".join([f"{key}={getattr(self, key)} " for key in self.selectors.keys()])+")"
-        
+    
+    def to_dict(self):
+        return {key: getattr(self, key) for key in self.selectors.keys()}

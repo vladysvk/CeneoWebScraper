@@ -26,3 +26,5 @@ def translate_data(text, source='pl', target='en'):
 def create_if_not_exists(path):
     if not os.path.exists(path):
         os.mkdir(path)
+
+

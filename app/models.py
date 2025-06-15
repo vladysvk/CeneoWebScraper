@@ -1,18 +1,14 @@
-import os
 import json
 import requests
-import matplotlib
 import numpy as np
 import pandas as pd
-
+import matplotlib
 from bs4 import BeautifulSoup
 from matplotlib import pyplot as plt
 from config import headers
 from app.utils import extract_data, translate_data, create_if_not_exists
 
-
 matplotlib.use('agg')
-
 
 class Product:
 
@@ -115,23 +111,6 @@ class Product:
         with open(f"./app/data/products/{self.product_id}.json", "w", encoding="UTF-8") as jf:
             json.dump(self.info_to_dict(), jf, indent=4, ensure_ascii=False)
 
-    def read_opinions(self):
-        path = os.path.join("app", "data", "opinions", f"{self.product_id}.json")
-
-        if not os.path.exists(path):
-            return "Product not found", 404
-        
-        with open(path, "r", encoding="utf-8") as jf:
-            data = json.load(jf)
-            
-    def read_info(self):
-        path = os.path.join("app", "data", "products", f"{self.product_id}.json")
-        with open(path, "r", encoding="utf-8") as jf:
-            info = json.load(jf)
-        self.product_name = info["product_name"]
-        self.stats = info["stats"]
-
-
 class Opinion:
 
     selectors = {
@@ -193,4 +172,3 @@ class Opinion:
         self.up_votes = int(self.up_votes)
         self.down_votes = int(self.down_votes)
         return self
-    

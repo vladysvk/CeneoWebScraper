@@ -130,6 +130,7 @@ class Product:
         self.stats = info["stats"]
 
 
+
 class Opinion:
 
     selectors = {

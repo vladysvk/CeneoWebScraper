@@ -7,6 +7,7 @@ from app.models import Product
 from flask import render_template, redirect, request, url_for, send_file, after_this_request
 from app.utils import create_if_not_exists
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -26,6 +27,7 @@ def extract():
         product.extract_opinions()
         product.calculate_stats()
         product.generate_charts()
+        print(product)
         product.save_opinions()
         product.save_info()
         return redirect(url_for('product', product_id=product_id))

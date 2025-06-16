@@ -1,5 +1,7 @@
-{% extends 'base.html' %} {% block title %}{% endblock %} {% block content %} {%
-for product in products %}
+{% extends 'base.html' %} 
+{% block title %}{% endblock %} 
+{% block content %} 
+{%for product in products %}
 <table border="1" cellpadding="5" cellspacing="0" class="table table-hover">
   <tbody>
     <tr>
@@ -41,4 +43,5 @@ for product in products %}
   </tbody>
 </table>
 
-{%endfor%} {% endblock %}
+{%endfor%} 
+{% endblock %}

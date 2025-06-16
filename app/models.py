@@ -4,7 +4,6 @@ import requests
 import matplotlib
 import numpy as np
 import pandas as pd
-
 from bs4 import BeautifulSoup
 from matplotlib import pyplot as plt
 from config import headers
@@ -12,7 +11,6 @@ from app.utils import extract_data, translate_data, create_if_not_exists
 
 
 matplotlib.use('agg')
-
 
 class Product:
 
@@ -193,4 +191,3 @@ class Opinion:
         self.up_votes = int(self.up_votes)
         self.down_votes = int(self.down_votes)
         return self
-    
